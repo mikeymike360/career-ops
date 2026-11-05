@@ -1,3 +1,4 @@
+import {localAiTimeout} from './local-ai-timeout.mjs';
 // Plain .mjs (same pattern as tracker-table.mjs/clean-chips.mjs/spawn-cli.mjs)
 // so tests/lib/run-cli-support.test.mjs can import it directly under Node. Import it
 // with the .mjs extension included (e.g. "@/lib/run-cli-support.mjs" or
@@ -277,7 +278,7 @@ export function parseClaudeEvent(line) {
       // Addition here, subtraction for Codex — see the header note. This shared
       // helper keeps the per-run total identical to /api/usage.
       result.tokens = claudeUsageTokens(ev.usage);
-      if (typeof ev.total_cost_usd === "number") result.costUsd = ev.total_cost_usd;
+      if (typeof ev.total_cost_usd === "number") result.costUsd = process.env.CAREER_OPS_LOCAL_OLLAMA === '1' ? 0 : ev.total_cost_usd;
     }
     // A terminal failure, the counterpart of parseCodexEvent's turn.failed. The
     // route's gate would otherwise have to infer this from the exit code alone,
@@ -439,9 +440,9 @@ export function newCompletedReportNum(beforeEntries, afterEntries) {
 // a report" (#3124).
 export const RUN_MAX_DURATION_S = 800;
 export function killMsForKind(kind) {
-  if (kind === "pdf") return 600_000;
-  if (kind === "evaluate") return 740_000;
-  return 780_000;
+  if (kind === "pdf") return localAiTimeout(600_000);
+  if (kind === "evaluate") return localAiTimeout(740_000);
+  return localAiTimeout(780_000);
 }
 
 // Message for a run the route stopped at its own time limit. It names the limit,

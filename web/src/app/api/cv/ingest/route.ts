@@ -1,4 +1,5 @@
 import { spawnHeadlessCli } from "@/lib/spawn-cli.mjs";
+import {localAiTimeout} from '@/lib/local-ai-timeout.mjs';
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -188,7 +189,7 @@ export async function POST(req: Request) {
         } catch {
           /* ignore */
         }
-      }, 240_000);
+      }, localAiTimeout(240_000));
       const safeClose = () => {
         if (!closed) {
           closed = true;

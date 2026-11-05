@@ -1,4 +1,5 @@
 import { spawnHeadlessCli } from "@/lib/spawn-cli.mjs";
+import {localAiTimeout} from '@/lib/local-ai-timeout.mjs';
 import type { Frame } from "playwright-core";
 import { resolveCli } from "@/lib/clis";
 import { careerOpsRoot } from "@/lib/career-ops";
@@ -110,7 +111,7 @@ function runPlanner(binPath: string, cliId: string, argsFor: (p: string) => stri
       } catch {
         /* ignore */
       }
-    }, 150_000);
+    }, localAiTimeout(150_000));
     child.on("close", () => {
       clearTimeout(killer);
       resolve(buf);

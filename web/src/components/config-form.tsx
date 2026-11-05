@@ -103,8 +103,9 @@ export function ConfigForm() {
     <div className="mx-auto max-w-2xl px-6 py-10">
       <h1 className="font-display text-2xl tracking-tight text-landing">Config</h1>
       <p className="mt-1 text-sm text-muted">
-        Run career-ops on your own AI, right on your computer. Your CV and data never leave your machine.
+        Original files and AI run on your PC. Your private Cloudflare website relays requests and responses.
       </p>
+      <a className="mt-3 inline-block text-sm underline" href="/personal-settings">Singapore eligibility and local runtime</a>
 
       {/* Engine mode */}
       <label className="mt-8 mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-muted">

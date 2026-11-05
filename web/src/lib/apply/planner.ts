@@ -1,4 +1,5 @@
 import { spawnHeadlessCli } from "@/lib/spawn-cli.mjs";
+import {localAiTimeout} from '@/lib/local-ai-timeout.mjs';
 import { CAPS } from "@/lib/worker-capabilities.mjs";
 import { scopeFrom } from "@/lib/claude-invocation.mjs";
 import { fencingReport } from "@/lib/cli-fencing.mjs";
@@ -78,7 +79,7 @@ export function runPlanner(opts: {
   const fencing = fencingReport({ cliId: spec.id, cliName: spec.name, capabilities: CAPS.localReadOnly });
   if (fencing.notice) log(`⚠️ ${fencing.notice}`);
   // Scale the timeout with form size (big forms = more drafting). Cap < maxDuration.
-  const killMs = Math.min(300_000, 150_000 + fieldCount * 6_000);
+  const killMs = localAiTimeout(Math.min(300_000, 150_000 + fieldCount * 6_000));
   log(`Spawning planner (timeout ${Math.round(killMs / 1000)}s)…`);
 
   return new Promise<PlannerRun>((resolve) => {

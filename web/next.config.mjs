@@ -9,6 +9,8 @@ const nextConfig = {
   agentRules: false,
   // PDF.js resolves its local worker relative to its own package in Node.
   serverExternalPackages: ["pdfjs-dist"],
+  // Machine-local agent binaries, credentials and model caches aren't app bundles.
+  outputFileTracingExcludes: { '/*': ['../local/**/*', './scripts/personal-runtime/**/*'] },
   // Two lockfiles exist on purpose (repo root + web/), so Next would infer the
   // repo root as the workspace root. On Windows that misinference can send
   // Turbopack's postcss workers into an unbounded respawn loop that exhausts

@@ -1,4 +1,5 @@
 import { pathToFileURL } from "node:url";
+import {localAiTimeout} from '@/lib/local-ai-timeout.mjs';
 import { buildConversationContext } from "@/lib/assistant-history.mjs";
 import { spawnHeadlessCli } from "@/lib/spawn-cli.mjs";
 import { cliSubstitutionNotice, cliUnavailableError, resolveCliOrFallback } from "@/lib/clis";
@@ -154,7 +155,7 @@ export async function POST(req: Request) {
         } catch {
           /* ignore */
         }
-      }, 90_000);
+      }, localAiTimeout(90_000));
       const safeClose = () => {
         if (!closed) {
           closed = true;

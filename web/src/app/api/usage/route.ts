@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 type Usage = { window5h: { tokens: number; messages: number }; window7d: { tokens: number; messages: number }; computedAt: number };
 let cache: { at: number; data: Usage } | null = null;
 
-const scanner = createUsageScanner({ root: path.join(os.homedir(), ".claude", "projects") });
+const scanner = createUsageScanner({ root: path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), ".claude"), "projects") });
 
 export async function GET() {
   if (cache && Date.now() - cache.at < 60_000) return NextResponse.json(cache.data);

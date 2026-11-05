@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {localAiTimeout} from '../../src/lib/local-ai-timeout.mjs';
+test('normal installations retain original timeouts; local opt-in is bounded and never shortens them',()=>{assert.equal(localAiTimeout(90000,{}),90000);assert.equal(localAiTimeout(90000,{CAREER_OPS_LOCAL_AI_TIMEOUT_MS:'3600000'}),3600000);for(const v of ['NaN','-1','1'])assert.equal(localAiTimeout(90000,{CAREER_OPS_LOCAL_AI_TIMEOUT_MS:v}),90000);assert.equal(localAiTimeout(90000,{CAREER_OPS_LOCAL_AI_TIMEOUT_MS:'99999999'}),3600000);});

@@ -5,7 +5,7 @@ import { X, Ban, Clock, MapPin, ChevronDown, SlidersHorizontal } from "lucide-re
 import { cn } from "@/lib/cn";
 import { ATS_LABEL, ATS_SOURCES, cleanChips, type AtsSource, type ExploreFilters } from "@/lib/explore";
 
-import { CHINA_PRESET, CHINA_SOURCES, EMPLOYER_LABEL } from "@/lib/employer-preset.mjs";
+import { CHINA_PRESET, CHINA_SOURCES, EMPLOYER_LABEL, SINGAPORE_PRESET, SINGAPORE_SOURCES, isPortalPreset } from "@/lib/employer-preset.mjs";
 import type { EmployerSource } from "@/lib/explore";
 
 const RECENCY = [
@@ -115,7 +115,9 @@ export function FilterBuilder({
   seededFrom?: string[];
   disabled?: boolean;
 }) {
-  const employer = filters.preset === CHINA_PRESET;
+  const employer = isPortalPreset(filters.preset);
+  const singapore = filters.preset === SINGAPORE_PRESET;
+  const selectedCatalog = singapore ? SINGAPORE_SOURCES : CHINA_SOURCES;
   const [advanced, setAdvanced] = useState(false);
   const set = (patch: Partial<ExploreFilters>) => onChange({ ...filters, ...patch });
   const toggleAts = (a: AtsSource) => {
@@ -131,16 +133,19 @@ export function FilterBuilder({
         <legend className="mb-1.5 text-[13px] font-medium">Discovery sources</legend>
         <div className="flex flex-wrap gap-4 text-sm">
           <label className="inline-flex items-center gap-2"><input type="radio" name="explore-preset" checked={!employer} onChange={() => set({ preset: undefined })} />Public ATS network</label>
-          <label className="inline-flex items-center gap-2"><input type="radio" name="explore-preset" checked={employer} onChange={() => set({ preset: CHINA_PRESET, employers: [...CHINA_SOURCES] as EmployerSource[] })} />China employer preset</label>
+          <label className="inline-flex items-center gap-2"><input type="radio" name="explore-preset" checked={filters.preset === CHINA_PRESET} onChange={() => set({ preset: CHINA_PRESET, employers: [...CHINA_SOURCES] as EmployerSource[] })} />China employer preset</label>
+          <label className="inline-flex items-center gap-2"><input type="radio" name="explore-preset" checked={singapore} onChange={() => set({ preset: SINGAPORE_PRESET, employers: [...SINGAPORE_SOURCES] as EmployerSource[], allow: [] })} />Singapore job boards</label>
         </div>
       </fieldset>
       {employer && <fieldset aria-describedby="employer-scope employer-selection">
-        <legend className="mb-2 text-[13px] font-medium">Employers</legend>
-        <div className="flex flex-wrap gap-4">{CHINA_SOURCES.map(id => <label key={id} className="inline-flex items-center gap-2 text-sm">
+        <legend className="mb-2 text-[13px] font-medium">{singapore ? 'Singapore sources' : 'Employers'}</legend>
+        <div className="flex flex-wrap gap-4">{selectedCatalog.map(id => <label key={id} className="inline-flex items-center gap-2 text-sm">
           <input type="checkbox" checked={filters.employers?.includes(id as EmployerSource) ?? false} onChange={e => set({ employers: e.target.checked ? [...(filters.employers ?? []), id as EmployerSource] : (filters.employers ?? []).filter(x => x !== id) })} />{EMPLOYER_LABEL[id as keyof typeof EMPLOYER_LABEL]}
         </label>)}</div>
-        <p id="employer-selection" className="mt-2 text-xs text-muted">{filters.employers?.length ? "Only selected employers will be scanned." : "Select at least one employer to start a scan."}</p>
+        <p id="employer-selection" className="mt-2 text-xs text-muted">{singapore ? 'Select a source and enter role terms below. Searches do not save your career preferences.' : filters.employers?.length ? "Only selected employers will be scanned." : "Select at least one employer to start a scan."}</p>
+        {singapore ? <div id="employer-scope" className="mt-2 space-y-2 text-xs text-muted"><p>Uses the original MyCareersFuture and JobStreet adapters. Coverage is limited to 100 postings per query/source; provider blocks and limits are reported as incomplete. Location and pass eligibility must be checked on the original job description.</p><p>Indeed and Foundit are manual search/import sources, not connected listing feeds. <a className="underline" target="_blank" rel="noreferrer" href={`https://sg.indeed.com/jobs?${new URLSearchParams({q:filters.positive.join(' '),l:'Singapore'})}`}>Open Indeed Singapore</a> · <a className="underline" target="_blank" rel="noreferrer" href="https://www.foundit.sg/">Open Foundit Singapore</a> · <a className="underline" target="_blank" rel="noreferrer" href={`https://sg.jobstreet.com/jobs?${new URLSearchParams({keywords:filters.positive.join(' '),where:'Singapore'})}`}>Open JobStreet directly</a></p></div> :
         <p id="employer-scope" className="mt-2 text-xs text-muted">Employer selection does not guarantee mainland-China, technical or experienced-hire eligibility. Check the original JD. Role and location terms are optional; unknown locations may remain, and remote titles may match. Locations are term filters, not eligibility checks. No posting-date cutoff applies. Other ATS filters are inactive for this preset. Coverage is limited to 10 pages per employer; limits or source problems are reported as incomplete.</p>
+        }
       </fieldset>}
 
       <div>
@@ -156,7 +161,7 @@ export function FilterBuilder({
         <KeywordField ariaLabel="Exclude" values={filters.negative} tone="exc" placeholder="manager, sales, contract…" onChange={(v) => set({ negative: v })} />
       </div>}
 
-      <div>
+      {!singapore && <div>
         <Label hint="matches any city, region, country, or Remote">
           <span className="inline-flex items-center gap-1.5">
             <MapPin className="size-3.5 text-muted" /> City or location
@@ -169,7 +174,7 @@ export function FilterBuilder({
           ariaLabel="City or location"
           onChange={(v) => set({ allow: v })}
         />
-      </div>
+      </div>}
 
       {!employer && <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         <div className="min-w-[18rem]">

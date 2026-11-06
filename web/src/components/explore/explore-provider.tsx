@@ -17,7 +17,7 @@ import {
   type ExploreMode,
   type ScanEvent,
 } from "@/lib/explore";
-import { CHINA_PRESET, EMPLOYER_LABEL, employerRequest } from "@/lib/employer-preset.mjs";
+import { isPortalPreset, EMPLOYER_LABEL, employerRequest } from "@/lib/employer-preset.mjs";
 import { makeAiStreamParser, type AiTraceChunk } from "@/lib/explore-ai";
 import { MAX_OFFER_LIMIT } from "@/lib/whats-new.mjs";
 import { isAbortError, isScannerMissing } from "@/lib/explore-error.mjs";
@@ -175,8 +175,8 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   const discover = useCallback(async () => {
     if (runningRef.current) return;
     const f = filtersRef.current;
-    if (f.preset === CHINA_PRESET && !f.employers?.length) return;
-    const employer = f.preset === CHINA_PRESET;
+    if (isPortalPreset(f.preset) && !f.employers?.length) return;
+    const employer = isPortalPreset(f.preset);
     if (employer) {
       try { sessionStorage.removeItem(RESULTS_KEY); } catch { /* unavailable */ }
     }

@@ -1,12 +1,15 @@
 // Isolated, read-only worker: import core functions, never invoke scan.main().
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { EMPLOYER_ENTRIES } from "../employer-preset.mjs";
+import { EMPLOYER_ENTRIES, SINGAPORE_SOURCES } from "../employer-preset.mjs";
 
 export const EMPLOYER_PAGE_CAP = 10;
 
 /** Uses the provider unchanged and the exact scan.mjs filter functions. */
 export async function scanEmployer(id, request, { provider, core, http }) {
+  const singapore = SINGAPORE_SOURCES.includes(id);
+  const pageCap = singapore ? 2 : EMPLOYER_PAGE_CAP;
+  const pageSize = singapore ? 50 : 100;
   const titleMatches = core.buildTitleFilter({ positive: request.positive });
   const locationMatches = core.buildLocationFilter({ allow: request.allow });
   let incomplete = "";
@@ -20,13 +23,13 @@ export async function scanEmployer(id, request, { provider, core, http }) {
           timeoutMs: 10_000,
         });
         const list =
-          id === "tencent"
+          id === 'mycareersfuture' ? json?.results : id === 'jobstreet' ? json?.data : id === "tencent"
             ? json?.Data?.Posts
             : id === "bytedance"
               ? json?.data?.job_post_list
               : json?.data?.list;
         const total = Number(
-          id === "tencent"
+          id === 'mycareersfuture' ? json?.total : id === 'jobstreet' ? json?.totalCount : id === "tencent"
             ? json?.Data?.Count
             : id === "bytedance"
               ? json?.data?.count
@@ -37,13 +40,13 @@ export async function scanEmployer(id, request, { provider, core, http }) {
         // Providers omit malformed records; do not turn their omission into a clean empty scan.
         for (const item of list) {
           const title =
-            id === "tencent"
+            singapore ? item?.title : id === "tencent"
               ? item?.RecruitPostName
               : id === "bytedance"
                 ? item?.title
                 : item?.name;
           const identity =
-            id === "tencent"
+            id === 'mycareersfuture' ? item?.metadata?.jobPostId : id === 'jobstreet' ? item?.id : id === "tencent"
               ? item?.PostURL || item?.PostId
               : id === "bytedance"
                 ? item?.id
@@ -56,8 +59,8 @@ export async function scanEmployer(id, request, { provider, core, http }) {
           )
             invalid++;
         }
-        if (total > EMPLOYER_PAGE_CAP * 100)
-          incomplete = `page cap (${EMPLOYER_PAGE_CAP} pages) limits coverage`;
+        if (total > pageCap * pageSize)
+          incomplete = `page cap (${pageCap} pages) limits coverage`;
         if (!list.length && total > 0)
           incomplete = "source stopped before reporting all postings";
         return json;
@@ -69,7 +72,7 @@ export async function scanEmployer(id, request, { provider, core, http }) {
   };
   // No keywords: provider fetches the board; core filters are the only matcher.
   const jobs = await provider.fetch(
-    { ...EMPLOYER_ENTRIES[id], max_pages: EMPLOYER_PAGE_CAP },
+    { ...EMPLOYER_ENTRIES[id], max_pages: pageCap, ...(singapore ? {mycareersfuture:{keywords:request.positive,size:pageSize},searchKeywords:request.positive.join(' ')} : {}) },
     ctx,
   );
   const offers = [];
@@ -151,12 +154,12 @@ if (process.argv[2] === "--worker") {
       http: http.makeHttpCtx(),
     });
     process.stdout.write(JSON.stringify(result));
-  } catch {
+  } catch (error) {
     process.stdout.write(
       JSON.stringify({
         id,
         state: "failed",
-        reason: "source request failed or returned invalid data",
+        reason: error?.status === 403 ? 'Source refused automated access (HTTP 403); open the job board directly.' : "source request failed or returned invalid data",
         offers: [],
       }),
     );

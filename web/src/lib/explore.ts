@@ -4,7 +4,7 @@
 // can never drift between the two halves. Server-only logic (spawning the scanner,
 // writing temp files) lives in lib/core/{scan,portals,pipeline}.ts.
 
-export type EmployerSource = "tencent" | "bytedance" | "meituan";
+export type EmployerSource = "tencent" | "bytedance" | "meituan" | "mycareersfuture" | "jobstreet";
 export type DiscoverySource = AtsSource | EmployerSource;
 export type EmployerScanOutcome = { state: "complete" | "partial" | "failed"; message: string };
 export type AtsSource = "greenhouse" | "lever" | "ashby" | "workday";
@@ -20,7 +20,7 @@ export const ATS_LABEL: Record<AtsSource, string> = {
  *  buildTitleFilter / buildLocationFilter semantics; sinceDays/ats/limitPerAts map
  *  to scan-ats-full.mjs's --since / --ats / --limit. */
 export type ExploreFilters = {
-  preset?: "china-employers";
+  preset?: "china-employers" | "singapore-boards";
   employers?: EmployerSource[];
   positive: string[];
   negative: string[];
@@ -143,10 +143,10 @@ export function parseExplorePatch(
   merge = false,
 ): ExploreFilters {
   const next: ExploreFilters = { ...base, ats: [...base.ats] };
-  if (raw.preset === "china-employers") next.preset = "china-employers";
+  if (raw.preset === "china-employers" || raw.preset === "singapore-boards") next.preset = raw.preset;
   else if (raw.preset !== undefined) next.preset = undefined;
   if (raw.employers !== undefined && Array.isArray(raw.employers)) {
-    next.employers = [...new Set(raw.employers.filter((id): id is EmployerSource => ["tencent", "bytedance", "meituan"].includes(String(id))))];
+    next.employers = [...new Set(raw.employers.filter((id): id is EmployerSource => ["tencent", "bytedance", "meituan", "mycareersfuture", "jobstreet"].includes(String(id))))];
   }
   const lists: [keyof ExploreFilters, string][] = [
     ["positive", "positive"],
@@ -172,7 +172,7 @@ export function parseExplorePatch(
 /** URL <-> filters codec (so a search is shareable/restorable). */
 export function filtersToParams(f: ExploreFilters): string {
   const sp = new URLSearchParams();
-  if (f.preset === "china-employers") {
+  if (f.preset === "china-employers" || f.preset === "singapore-boards") {
     sp.set("preset", f.preset);
     sp.set("employers", (f.employers ?? []).join(","));
   }

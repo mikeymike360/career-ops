@@ -348,6 +348,9 @@ test("starting the dashboard starts the PDF painter from the repo root and does 
     }
     if (pid > 0) {
       try { process.kill(pid, "SIGTERM"); } catch {}
+      // Detached Windows children can deny Node's termination handle while
+      // still holding their cwd open. This PID came from this test's marker.
+      if (process.platform === "win32") spawnSync("taskkill.exe", ["/PID", String(pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
       // The painter's cwd is the temp root now, and Windows will not remove a
       // directory a live process is sitting in. Wait for it to exit first.
       const gone = Date.now() + 5_000;

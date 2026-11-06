@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { employerRequest, CHINA_PRESET } from "@/lib/employer-preset.mjs";
+import { employerRequest, isPortalPreset } from "@/lib/employer-preset.mjs";
 import { runEmployerDiscovery } from "@/lib/core/employer-discovery.mjs";
 import { runDiscovery } from "@/lib/core/scan";
 import { rootScript } from "@/lib/career-ops";
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const body = (await readJsonObject(req)) ?? {};
 
-  const employer = body.preset === CHINA_PRESET;
+  const employer = isPortalPreset(body.preset);
   // Validate the raw source selection before the forgiving legacy filter codec.
   if (body.preset && !employer) return Response.json({ error: "Unknown discovery preset." }, { status: 400 });
   if (employer) {

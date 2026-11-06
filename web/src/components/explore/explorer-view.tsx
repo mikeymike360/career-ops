@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { instrumentSerif } from "@/lib/fonts";
 import { normalizeTextKey } from "@/lib/core/normalize-text-key.mjs";
 import { paramsToFilters, paramsToAi, type ExploreFilters } from "@/lib/explore";
-import { CHINA_PRESET } from "@/lib/employer-preset.mjs";
+import { isPortalPreset, SINGAPORE_PRESET } from "@/lib/employer-preset.mjs";
 import { FilterBuilder } from "./filter-builder";
 import { DiscoveringState } from "./discovering-state";
 import { AiHuntView } from "./ai-hunt-view";
@@ -82,7 +82,7 @@ export function ExplorerView({
       initFilters(sp.toString() ? paramsToFilters(sp) : seed.filters);
       // Onboarding hand-off: ?run=1 auto-fires the free scan + flags the first-run
       // banner (the "matches found from your CV, free" reveal).
-      if (sp.get("run") === "1" && sp.get("preset") !== CHINA_PRESET) {
+      if (sp.get("run") === "1" && !isPortalPreset(sp.get("preset"))) {
         setFirstRun(true);
         void discover();
       }
@@ -106,8 +106,8 @@ export function ExplorerView({
 
   const isAi = mode === "ai";
   const isResults = phase === "results";
-  const employer = filters.preset === CHINA_PRESET;
-  const canDiscover = !running && (employer ? (filters.employers?.length ?? 0) > 0 : filters.ats.length > 0);
+  const employer = isPortalPreset(filters.preset);
+  const canDiscover = !running && (employer ? (filters.employers?.length ?? 0) > 0 && (filters.preset !== SINGAPORE_PRESET || filters.positive.length > 0) : filters.ats.length > 0);
   const scanRunning = running && !isAi && !employer;
   // Keep one ResultsList mounted across scanning → revealing → results so
   // filter/sort/scroll and co-rise survive the 850ms reveal handoff.
@@ -117,7 +117,7 @@ export function ExplorerView({
 
   return (
     <div className={scanRunning ? undefined : "mx-auto max-w-5xl px-5 py-8 md:px-8"}>
-      <p role="status" aria-live="polite" aria-atomic="true" className="mb-4 text-sm text-muted">{!isAi && (employerOutcome?.message || (employer && running ? "Scanning selected employers…" : ""))}</p>
+      <p role="status" aria-live="polite" aria-atomic="true" className="mb-4 text-sm text-muted">{!isAi && (employerOutcome?.message || (employer && running ? "Scanning selected sources…" : ""))}</p>
       {scanRunning && <DiscoveringState />}
       {!scanRunning && (
         <>
@@ -136,7 +136,7 @@ export function ExplorerView({
           <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
             {isAi
               ? "Describe the role in plain language — an AI hunts the open web for it, on your own AI. Candidates are unverified until you evaluate."
-              : employer ? "Scan selected employer sites using your role and location terms, zero tokens. Open an original JD to check its details." : "Scan the public ATS network — Greenhouse, Lever, Ashby, Workday. Fresh postings matched to you, zero tokens. You only spend when you choose to evaluate one."}
+              : filters.preset === SINGAPORE_PRESET ? "Search Singapore job boards with the original Career Ops providers. Provider failures are shown alongside any available listings." : employer ? "Scan selected employer sites using your role and location terms, zero tokens. Open an original JD to check its details." : "Scan the public ATS network — Greenhouse, Lever, Ashby, Workday. Fresh postings matched to you, zero tokens. You only spend when you choose to evaluate one."}
           </p>
         )}
       </header>
@@ -273,13 +273,13 @@ function DiscoverBar({ canDiscover, onDiscover, label, filters }: { canDiscover:
         type="button"
         disabled={!canDiscover && !running}
         aria-disabled={!canDiscover}
-        aria-describedby={filters.preset === CHINA_PRESET ? "employer-selection" : undefined}
+        aria-describedby={isPortalPreset(filters.preset) ? "employer-selection" : undefined}
         onClick={() => { if (canDiscover) onDiscover(); }}
         className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition-all hover:brightness-110 disabled:opacity-50 max-sm:min-h-[44px]"
       >
         <Compass className="size-4" /> {label}
       </button>
-      {filters.preset !== CHINA_PRESET && <ScheduleJobAction filters={filters} />}
+      {!isPortalPreset(filters.preset) && <ScheduleJobAction filters={filters} />}
       <span className="inline-flex items-center gap-1.5 text-[12px] text-muted">
         <span className="size-1.5 rounded-full bg-emerald-500" />
         Evaluating a role later costs tokens. Discovering never does.

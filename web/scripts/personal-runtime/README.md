@@ -8,9 +8,10 @@ AI uses the original Claude Code adapter against local Ollama's Anthropic-compat
 
 ## Daily use
 
-- Run `Start Personal Career Ops.cmd` in this checkout, or `Start Career Ops.cmd` in the parent folder. Keep this PC awake. A second start detects the running app.
+- Run `Start Personal Career Ops.cmd` in this checkout, or `Start Career Ops.cmd` in the parent folder. Keep this PC awake. This PC uses the owner-only Windows task `CareerOps-Mikey360-PrivateRuntime`, started on demand, so the runtime continues independently of the chat. It does not auto-start at Windows sign-in. A second start detects the running app.
 - Open the existing private Career Desk website and enter your existing access key.
 - In Config, use **Singapore eligibility and local runtime** for citizen, PR, work-pass-holder or foreign-applicant status. This updates `config/profile.yml` with backups through the original safe writer.
+- In Explore, choose **Singapore job boards**, enter your role terms and select MyCareersFuture/JobStreet. This calls the original provider adapters and core matching functions. It reports blocked sources as partial coverage. Indeed/Foundit are explicitly manual search/import links.
 - Start from the original CV onboarding. Supply your real CV and preferences before evaluations or CV generation. Nothing has been filled with sample career data.
 - Review application drafts and forms yourself. The original Playwright session previews/fills; you press Submit.
 - Run `Stop Personal Career Ops.cmd` to stop this app's process tree. Restarting the PC also stops it.
